@@ -1,0 +1,13 @@
+{
+    "$home_path": "%HOME%",
+    "$package_path": "${home_path}debug",
+    "exe_path": "${package_path}/mytool.exe",
+    "node": {
+        "number": 0,
+        "tags": ["foo", "bar"],
+        "next_node": {
+            "number": 1,
+            "tags": ["fizz", "buzz"]
+        }
+    }
+}
