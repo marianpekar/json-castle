@@ -33,13 +33,17 @@ TEST_JSON = {
         "name": "${global_supplies}",
         "country": "USA",
         "rating": "${number}",
-        "active": True
+        "active": True,
+        "elements": [ "foo", "bar" ],
+        "tags": [ "fizz", "buzz" ],
     },
     "supplier2": {
         "name": "${euro_trail}",
         "country": "Germany",
         "rating": "${number}",
-        "active": "${bool}"
+        "active": "${bool}",
+        "elements_with_vars": [ "${fo}o", "${bar}" ],
+        "tags_with_vars": [ "${fizz}", "${buzz}" ],
     },
     "suppliers": [
         {
@@ -47,6 +51,8 @@ TEST_JSON = {
             "country": "USA",
             "rating": 4.7,
             "active": True,
+            "elements": [ "foo", "bar" ],
+            "tags": [ "fizz", "buzz" ],
         },
         {
             "name": "Euro Trade",
@@ -58,7 +64,9 @@ TEST_JSON = {
             "name": "${global_supplies}",
             "country": "Germany",
             "rating": "${number}",
-            "active": "${bool}"
+            "active": "${bool}",
+            "elements_with_vars": [ "${fo}o", "${bar}" ],
+            "tags_with_vars": [ "${fizz}", "${buzz}" ],
         },
         {
             "name": "${euro_trail}",
@@ -81,6 +89,10 @@ class Supplier:
     country: str
     rating: float
     active: bool = False
+    elements: List[str] = None
+    tags: Tuple[str, ...] = ()
+    elements_with_vars: List[str] = None
+    tags_with_vars: Tuple[str, ...] = ()
 
 @dataclass
 class InventoryItem:
@@ -121,13 +133,13 @@ class UnitTests(unittest.TestCase):
         self.assertEqual(item.name, "Foo")
         self.assertEqual(item.category, ItemCategory.FOOD)
         self.assertEqual(item.active, True)
-        self.assertEqual(item.suppliers[0].country, "USA")
         self.assertEqual(item.elements, ["foo", "bar"])
         self.assertEqual(item.tags, ("fizz", "buzz"))
-        self.assertEqual(item.elements_with_vars, ["foo", "bar"])
-        self.assertEqual(item.tags_with_vars, ("fizz", "buzz"))
+        self.assertEqual(item.suppliers[0].country, "USA")
+        self.assertEqual(item.suppliers[0].elements, ["foo", "bar"])
+        self.assertEqual(item.suppliers[0].tags, ("fizz", "buzz"))
 
-    def test_override(self):
+    def test_kwargs_override(self):
         path = write_temp_json(TEST_JSON)
         item = JsonCastle.load_from_file(InventoryItem, path, 
                                          unit_price="99.9", 
@@ -141,7 +153,7 @@ class UnitTests(unittest.TestCase):
         self.assertEqual(item.elements[0], "Fizz")
         self.assertEqual(item.elements_with_vars[1], "Foo")
 
-    def test_override_nested(self):
+    def test_kwargs_override_nested(self):
         path = write_temp_json(TEST_JSON)
         item = JsonCastle.load_from_file(
             InventoryItem,
@@ -152,7 +164,7 @@ class UnitTests(unittest.TestCase):
         self.assertEqual(item.supplier.country, "Japan")
         self.assertEqual(item.supplier.active, False)
 
-    def test_override_list_item(self):
+    def test_kwargs_override_list_items(self):
         path = write_temp_json(TEST_JSON)
         item = JsonCastle.load_from_file(
             InventoryItem,
@@ -165,12 +177,22 @@ class UnitTests(unittest.TestCase):
         self.assertEqual(item.suppliers[0].active, False)
         self.assertEqual(item.suppliers[2].active, False)
 
-    def test_variable_substitution(self):
+    def test_variable_substitutions(self):
         path = write_temp_json(TEST_JSON)
         item = JsonCastle.load_from_file(InventoryItem, path)
         self.assertEqual(item.supplier.name, "Global Supplies")
         self.assertEqual(item.foreign, True)
         self.assertEqual(item.supplier.rating, 4.7)
+        self.assertEqual(item.elements_with_vars, ["foo", "bar"])
+        self.assertEqual(item.tags_with_vars, ("fizz", "buzz"))
+
+    def test_variable_substitutions_in_list(self):
+        path = write_temp_json(TEST_JSON)
+        item = JsonCastle.load_from_file(InventoryItem, path)
+        self.assertEqual(item.suppliers[2].name, "Global Supplies")
+        self.assertEqual(item.suppliers[2].rating, 4.7)
+        self.assertEqual(item.suppliers[2].elements_with_vars, ["foo", "bar"])
+        self.assertEqual(item.suppliers[2].tags_with_vars, ("fizz", "buzz"))
 
     def test_partial_variable_substitution(self):
         path = write_temp_json(TEST_JSON)
@@ -181,12 +203,6 @@ class UnitTests(unittest.TestCase):
         path = write_temp_json(TEST_JSON)
         item = JsonCastle.load_from_file(InventoryItem, path)
         self.assertEqual(item.category, ItemCategory.FOOD)
-
-    def test_variable_substitution_in_list(self):
-        path = write_temp_json(TEST_JSON)
-        item = JsonCastle.load_from_file(InventoryItem, path)
-        self.assertEqual(item.suppliers[2].name, "Global Supplies")
-        self.assertEqual(item.suppliers[2].rating, 4.7)
 
     def test_environment_variable_substitution(self):
         path = write_temp_json(TEST_JSON)
@@ -221,26 +237,6 @@ class UnitTests(unittest.TestCase):
         item = JsonCastle().load_from_file(InventoryItem, path)
         self.assertEqual(item.suppliers[3].name, "Euro Trail")
 
-    def test_remove_list_item(self):
-        path = write_temp_json(TEST_JSON)
-        item = JsonCastle.load_from_file(
-            InventoryItem,
-            path,
-            **{"~suppliers[0]": ""}
-        )
-        self.assertEqual(len(item.suppliers), 3)
-        self.assertEqual(item.suppliers[0].name, "Euro Trade")
-
-    def test_remove_tuple_item(self):
-        path = write_temp_json(TEST_JSON)
-        item = JsonCastle.load_from_file(
-            InventoryItem,
-            path,
-            **{"~tags[1]": ""}
-        )
-        self.assertEqual(len(item.tags), 1)
-        self.assertEqual(item.tags[0], "fizz")
-
     def test_add_list_item(self):
         path = write_temp_json(TEST_JSON)
         item = JsonCastle.load_from_file(
@@ -261,7 +257,7 @@ class UnitTests(unittest.TestCase):
         self.assertEqual(len(item.tags), 3)
         self.assertEqual(item.tags[2], "bar")
 
-    def test_add_custom_item(self):
+    def test_add_custom_item_from_list(self):
         path = write_temp_json(TEST_JSON)
         item = JsonCastle.load_from_file(
             InventoryItem,
@@ -280,6 +276,26 @@ class UnitTests(unittest.TestCase):
         self.assertEqual(item.suppliers[4].country, "Japan")
         self.assertEqual(item.suppliers[4].rating, 4.9)
         self.assertEqual(item.suppliers[4].active, True)
+
+    def test_remove_custom_list_item(self):
+        path = write_temp_json(TEST_JSON)
+        item = JsonCastle.load_from_file(
+            InventoryItem,
+            path,
+            **{"~suppliers[0]": ""}
+        )
+        self.assertEqual(len(item.suppliers), 3)
+        self.assertEqual(item.suppliers[0].name, "Euro Trade")
+
+    def test_remove_tuple_item(self):
+        path = write_temp_json(TEST_JSON)
+        item = JsonCastle.load_from_file(
+            InventoryItem,
+            path,
+            **{"~tags[1]": ""}
+        )
+        self.assertEqual(len(item.tags), 1)
+        self.assertEqual(item.tags[0], "fizz")
 
     def test_remove_list_item_by_val(self):
         path = write_temp_json(TEST_JSON)
@@ -300,3 +316,43 @@ class UnitTests(unittest.TestCase):
         )
         self.assertEqual(len(item.tags), 1)
         self.assertEqual(item.tags[0], "buzz")
+
+    def test_remove_list_item_by_val_nested(self):
+        path = write_temp_json(TEST_JSON)
+        item = JsonCastle.load_from_file(
+            InventoryItem,
+            path,
+            **{"~supplier.elements": "foo"}
+        )
+        self.assertEqual(len(item.supplier.elements), 1)
+        self.assertEqual(item.supplier.elements[0], "bar")
+
+    def test_remove_tuple_item_by_val_nested(self):
+        path = write_temp_json(TEST_JSON)
+        item = JsonCastle.load_from_file(
+            InventoryItem,
+            path,
+            **{"~supplier.tags": "fizz"}
+        )
+        self.assertEqual(len(item.supplier.tags), 1)
+        self.assertEqual(item.supplier.tags[0], "buzz")
+
+    def test_remove_list_item_by_val_in_list(self):
+        path = write_temp_json(TEST_JSON)
+        item = JsonCastle.load_from_file(
+            InventoryItem,
+            path,
+            **{"~suppliers[0].elements": "foo"}
+        )
+        self.assertEqual(len(item.suppliers[0].elements), 1)
+        self.assertEqual(item.suppliers[0].elements[0], "bar")
+
+    def test_remove_tuple_item_by_val_in_list(self):
+        path = write_temp_json(TEST_JSON)
+        item = JsonCastle.load_from_file(
+            InventoryItem,
+            path,
+            **{"~suppliers[0].tags": "fizz"}
+        )
+        self.assertEqual(len(item.suppliers[0].tags), 1)
+        self.assertEqual(item.suppliers[0].tags[0], "buzz")
