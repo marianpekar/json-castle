@@ -280,3 +280,23 @@ class UnitTests(unittest.TestCase):
         self.assertEqual(item.suppliers[4].country, "Japan")
         self.assertEqual(item.suppliers[4].rating, 4.9)
         self.assertEqual(item.suppliers[4].active, True)
+
+    def test_remove_list_item_by_val(self):
+        path = write_temp_json(TEST_JSON)
+        item = JsonCastle.load_from_file(
+            InventoryItem,
+            path,
+            **{"~elements": "foo"}
+        )
+        self.assertEqual(len(item.elements), 1)
+        self.assertEqual(item.elements[0], "bar")
+
+    def test_remove_tuple_item_by_val(self):
+        path = write_temp_json(TEST_JSON)
+        item = JsonCastle.load_from_file(
+            InventoryItem,
+            path,
+            **{"~tags": "fizz"}
+        )
+        self.assertEqual(len(item.tags), 1)
+        self.assertEqual(item.tags[0], "buzz")
