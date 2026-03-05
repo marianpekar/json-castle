@@ -6,9 +6,9 @@ import re
 import json
 
 class JsonCastle:
-    """A class built on top of native json for deserialization from JSON to data 
-    classes that supports nested objects with variables, environment variables, 
-    and post-load overrides."""
+    """Built on top of the native json module for deserialization from JSON to data classes 
+    with additional support for nested objects with variables, environment variables, and 
+    post-load overrides."""
     
     __VAR_PATTERN = re.compile(r"\$\{(\w+)\}")
     __ENV_VAR_PATTERN = re.compile(r"%(\w+)%")
