@@ -1,17 +1,23 @@
 from dataclasses import is_dataclass, fields
-from typing import get_origin, get_args, Union
+from typing import IO, get_origin, get_args, Union
 from enum import Enum
 import os
 import re
 import json
 
 class JsonCastle:
+    """A class built on top of native json for deserialization from JSON to data 
+    classes that supports nested objects with variables, environment variables, 
+    and post-load overrides."""
+    
     __VAR_PATTERN = re.compile(r"\$\{(\w+)\}")
     __ENV_VAR_PATTERN = re.compile(r"%(\w+)%")
     __INDEXER_PATTERN = re.compile(r"(\w+)\[(\d+)\]")
      
     @staticmethod
     def parse_args(argv):
+        """Parses command line arguments and returns a dictionary that can be passed 
+        as **kwargs to load_from_file and load methods."""
         dct = {}
         for arg in argv[1:]:
             if "=" in arg:
@@ -23,12 +29,16 @@ class JsonCastle:
 
     @staticmethod
     def load_from_file(cls, path: str, **kwargs):
+        """Read a JSON file at path and returns an instance of cls. Optionally you can 
+        pass **kwargs to post-load overrides."""
         with open(path, "r") as f:
-            dct = json.load(f)
-            return JsonCastle.load(cls, dct, **kwargs)
+            return JsonCastle.load(cls, f, **kwargs)
     
     @staticmethod
-    def load(cls, dct, **kwargs):
+    def load(cls, stream: IO[str], **kwargs):
+        """Parses a JSON stream and returns an instance of cls. Optionally you can 
+        pass **kwargs to post-load overrides."""
+        dct = json.load(stream)
         dct = JsonCastle.__substitute_variables(dct)
 
         for k, v in kwargs.items():
