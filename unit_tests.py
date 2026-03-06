@@ -356,3 +356,6 @@ class UnitTests(unittest.TestCase):
         )
         self.assertEqual(len(item.suppliers[0].tags), 1)
         self.assertEqual(item.suppliers[0].tags[0], "buzz")
+
+if __name__ == '__main__':
+    unittest.main()
