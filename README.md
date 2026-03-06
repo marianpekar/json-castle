@@ -147,7 +147,7 @@ If there is more than one occurence if `programming` string in the collection, o
 
 ## Unit Tests
 
-Unit Tests are not just a great way to ensure nothing is broken when a new feature is added, but also for implementing new features using TDD, which is the recommended way for extending this library. These tests can also serve as an overview of what the library is capable of. You can find all tests in the unit_test.py file.
+Unit Tests are not just a great way to ensure nothing is broken when a new feature is added, but also for implementing new features using TDD, which is the recommended way for extending this library. These tests can also serve as an overview of what the library is capable of. You can find all tests in the `tests/test_json_castle.py` file.
 
 ## Future Ideas
 
