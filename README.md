@@ -151,11 +151,12 @@ Unit Tests are not just a great way to ensure nothing is broken when a new featu
 
 ## Future Ideas
 
-* Add support for conditionals, loops, and mathematical expressions in JSON.
+* Add support for conditionals and loops in JSON.
+* ~~Add mathematical expressions in JSON.~~ ✅
 * Extend the `parse_args` method to allow adding a custom object to a collection.
 * Add regex support for removing items by value.
 * When removing an item from a collection by value, let the user decide whether they want to remove just one or all items that match the value (`~page.tags=programming` removes the first; `~!page.tags=programming` removes all).
 * Add support for removing items from a numerical collection by conditions `>`, `<`, `<=` , or `=>`.
 * Add support for removing items by range (i.e. `~items[1:4]` would remove items at indices 1, 2, 3 and 4).
 * Add support for removing custom items by condition (i.e., `~people={age < 16}` would remove from the people collection all objects with the age key-value pair with age less than 16).
-* Add support for datetime expressions in JSON.
+* ~~Add support for datetime expressions in JSON.~~ ✅

@@ -13,6 +13,7 @@ class JsonCastle:
     __VAR_PATTERN = re.compile(r"\$\{(\w+)\}")
     __ENV_VAR_PATTERN = re.compile(r"%(\w+)%")
     __INDEXER_PATTERN = re.compile(r"(\w+)\[(\d+)\]")
+    __EXPR_PATTERN = re.compile(r"\{\{(.*?)\}\}")
      
     @staticmethod
     def parse_args(argv):
@@ -40,6 +41,7 @@ class JsonCastle:
         pass **kwargs to post-load overrides."""
         dct = json.load(stream)
         dct = JsonCastle.__substitute_variables(dct)
+        dct = JsonCastle.__evaluate_python(dct)
 
         for k, v in kwargs.items():
             if k.startswith("+"):
@@ -86,6 +88,31 @@ class JsonCastle:
 
             return JsonCastle.__ENV_VAR_PATTERN.sub(repl_env, dct)
 
+        else:
+            return dct
+        
+    @staticmethod
+    def __evaluate_python(dct): 
+        if isinstance(dct, dict):
+            result = {}
+            for k, v in dct.items():
+                result[k] = JsonCastle.__evaluate_python(v)
+            return result
+        
+        if isinstance(dct, list):
+            return [JsonCastle.__evaluate_python(item) for item in dct]
+        
+        elif isinstance(dct, str):
+            if dct.startswith("{{") and dct.endswith("}}"):
+                expression = dct[2:-2]
+                return str(eval(expression))
+
+            def repl_expr(match):
+                expression = match.group(1)
+                return str(eval(expression))
+
+            return JsonCastle.__EXPR_PATTERN.sub(repl_expr, dct)
+        
         else:
             return dct
         

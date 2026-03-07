@@ -4,6 +4,7 @@ import os
 import json
 import tempfile
 import unittest
+import datetime as dt
 from enum import Enum
 from typing import Dict, List, Optional, Tuple, Union
 
@@ -75,7 +76,12 @@ TEST_JSON = {
         },
     ],
     "system": "%SYSTEM_ENV_VAR%",
-    "path": "%ROOT_PATH%/src"
+    "path": "%ROOT_PATH%/src",
+    "expression": "{{1+1}}",
+    "expressions": [ 
+        "1+1={{1+1}}",
+        "{{__import__('datetime').datetime.today().strftime('%B %d, %Y')}}"
+    ]
 }
 
 class ItemCategory(Enum):
@@ -118,6 +124,8 @@ class InventoryItem:
     mixed_value: Union[int, str] = None
     system: str = None
     path: str = None
+    expression: str = None
+    expressions: List[str] = None
 
 def write_temp_json(data):
     tmp = tempfile.NamedTemporaryFile(mode="w+", delete=False)
@@ -356,6 +364,14 @@ class UnitTests(unittest.TestCase):
         )
         self.assertEqual(len(item.suppliers[0].tags), 1)
         self.assertEqual(item.suppliers[0].tags[0], "buzz")
+
+    def test_evaluate_python_expressions(self):
+        path = write_temp_json(TEST_JSON)
+        item = JsonCastle.load_from_file(InventoryItem, path)
+        self.assertEqual(item.expression, "2")
+        self.assertEqual(item.expressions[0], "1+1=2")
+        self.assertEqual(item.expressions[1], dt.date.today().strftime("%B %d, %Y"))
+
 
 if __name__ == '__main__':
     unittest.main()
