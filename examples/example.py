@@ -1,5 +1,4 @@
 from pprint import pprint
-from typing import List
 import sys
 
 from json_castle import JsonCastle
@@ -9,7 +8,7 @@ from dataclasses import dataclass
 class Cfg:
     exe_path: str = None
     node: Node = None
-    expressions: List[str] = None
+    expressions: list[str] = None
 
 @dataclass
 class Node:

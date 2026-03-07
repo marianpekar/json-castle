@@ -6,7 +6,7 @@ import tempfile
 import unittest
 import datetime as dt
 from enum import Enum
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Optional, Union
 
 TEST_JSON = {
     "$global_supplies": "Global Supplies",
@@ -96,10 +96,10 @@ class Supplier:
     country: str
     rating: float
     active: bool = False
-    elements: List[str] = None
-    tags: Tuple[str, ...] = ()
-    elements_with_vars: List[str] = None
-    tags_with_vars: Tuple[str, ...] = ()
+    elements: list[str] = None
+    tags: tuple[str, ...] = ()
+    elements_with_vars: list[str] = None
+    tags_with_vars: tuple[str, ...] = ()
 
 @dataclass
 class InventoryItem:
@@ -110,23 +110,23 @@ class InventoryItem:
     active: bool = True
     foreign: bool = False
     discount: Optional[float] = None
-    elements: List[str] = None
-    tags: Tuple[str, ...] = ()
-    elements_with_vars: List[str] = None
-    tags_with_vars: Tuple[str, ...] = ()
-    ratings: List[int] = None
+    elements: list[str] = None
+    tags: tuple[str, ...] = ()
+    elements_with_vars: list[str] = None
+    tags_with_vars: tuple[str, ...] = ()
+    ratings: list[int] = None
     category: ItemCategory = ItemCategory.OTHER
     supplier_name: str = None
     supplier: Optional[Supplier] = None
     supplier2: Optional[Supplier] = None
-    suppliers: List[Supplier] = None
-    metadata: Dict[str, int] = None
-    related_items: Dict[str, InventoryItem] = None
+    suppliers: list[Supplier] = None
+    metadata: dict[str, int] = None
+    related_items: dict[str, InventoryItem] = None
     mixed_value: Union[int, str] = None
     system: str = None
     path: str = None
     expression: str = None
-    expressions: List[str] = None
+    expressions: list[str] = None
 
 def write_temp_json(data):
     tmp = tempfile.NamedTemporaryFile(mode="w+", delete=False)
