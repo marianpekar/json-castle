@@ -18,8 +18,8 @@ class Node:
     next_node: Node = None
 
 # Run
-# python example.py node.number=1 ~node.tags[0] node.next_node.number=2 +node.next_node.tags=foo ~node.next_node.tags=buzz
+# python examples/example.py examples/example.json node.number=1 ~node.tags[0] node.next_node.number=2 +node.next_node.tags=foo ~node.next_node.tags=buzz
 # and compare print in console with example.json to see the effect of environment local variable 
 # substitutions and CLI overrides
-cfg = JsonCastle.load_from_file(Cfg, "example.json", **JsonCastle.parse_args(sys.argv))
+cfg = JsonCastle.load_from_file(Cfg, sys.argv[1], **JsonCastle.parse_args(sys.argv, 2))
 pprint(cfg)
