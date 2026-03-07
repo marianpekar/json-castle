@@ -17,11 +17,11 @@ class JsonCastle:
     __EXPR_PATTERN = re.compile(r"\{\{(.*?)\}\}")
      
     @staticmethod
-    def parse_args(argv):
+    def parse_args(argv, start_idx = 1):
         """Parses command line arguments and returns a dictionary that can be passed 
         as **kwargs to load_from_file and load methods."""
         dct = {}
-        for arg in argv[1:]:
+        for arg in argv[start_idx:]:
             if "=" in arg:
                 k, v = arg.split("=", 1)
                 dct[k] = v
