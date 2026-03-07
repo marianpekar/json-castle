@@ -95,7 +95,7 @@ If you want to deserialize your JSON from a string stream, you can use the stati
 
 Optionally, you can pass a second parameter to the `JsonCastle.parse_args` method to set the index from which arguments should be parsed, so you can reserve the preceding arguments for something else, i.e., you can use the first CLI argument to specify a path to a JSON file and start parsing overrides from the second one like this:
 
-```
+```python
 cfg = JsonCastle.load_from_file(Cfg, sys.argv[1], **JsonCastle.parse_args(sys.argv, 2))
 ```
 
