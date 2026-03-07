@@ -47,7 +47,10 @@ class JsonCastle:
             if k.startswith("+"):
                 JsonCastle.__add_item(data, k[1:].split("."), v)
             elif k.startswith("~"):
-                JsonCastle.__remove_item(data, k[1:].split("."), v)
+                if k[1] == '!':
+                    JsonCastle.__remove_item(data, k[2:].split("."), v, remove_all=True)
+                else:
+                    JsonCastle.__remove_item(data, k[1:].split("."), v)
             else:
                 JsonCastle.__apply_overrides(data, k.split("."), v)
 
@@ -171,7 +174,7 @@ class JsonCastle:
             return value
             
     @staticmethod
-    def __remove_item(items, path, value=None):
+    def __remove_item(items, path, value=None, remove_all=False):
         for idx, part in enumerate(path):
             match = JsonCastle.__INDEXER_PATTERN.fullmatch(part)
 
@@ -195,7 +198,17 @@ class JsonCastle:
                     if value is None:
                         items.pop(part, None)
                     else:
-                        items[part].remove(value)
+                        new_items = []
+                        value_regex = re.compile(value)
+                        removed = False   
+                        for item in items[part]:
+                            if value_regex.fullmatch(item) and not removed:
+                                if not remove_all:
+                                    removed = True
+                                continue
+
+                            new_items.append(item)    
+                            items[part] = new_items
                     return
                 else:
                     if part not in items or not isinstance(items[part], dict):
