@@ -39,28 +39,28 @@ class JsonCastle:
     def load(cls, stream: IO[str], **kwargs):
         """Parses a JSON stream and returns an instance of cls. Optionally you can 
         pass **kwargs to post-load overrides."""
-        dct = json.load(stream)
-        dct = JsonCastle.__substitute_variables(dct)
-        dct = JsonCastle.__evaluate_python(dct)
+        data = json.load(stream)
+        data = JsonCastle.__substitute_variables(data)
+        data = JsonCastle.__evaluate_python(data)
 
         for k, v in kwargs.items():
             if k.startswith("+"):
-                JsonCastle.__add_item(dct, k[1:].split("."), v)
+                JsonCastle.__add_item(data, k[1:].split("."), v)
             elif k.startswith("~"):
-                JsonCastle.__remove_item(dct, k[1:].split("."), v)
+                JsonCastle.__remove_item(data, k[1:].split("."), v)
             else:
-                JsonCastle.__apply_overrides(dct, k.split("."), v)
+                JsonCastle.__apply_overrides(data, k.split("."), v)
 
-        return JsonCastle.__from_dict(cls, dct)
+        return JsonCastle.__instantiate_dataclass(cls, data)
 
     @staticmethod
-    def __substitute_variables(dct, vars=None):
+    def __substitute_variables(node, vars=None):
         if vars is None:
             vars = {}
 
-        if isinstance(dct, dict):
+        if isinstance(node, dict):
             result = {}
-            for k, v in dct.items():
+            for k, v in node.items():
                 if k.startswith("$"):
                     v = JsonCastle.__substitute_variables(v, vars)
                     vars[k[1:]] = v
@@ -68,96 +68,92 @@ class JsonCastle:
                     result[k] = JsonCastle.__substitute_variables(v, vars)
             return result
 
-        elif isinstance(dct, list):
-            return [JsonCastle.__substitute_variables(item, vars) for item in dct]
+        elif isinstance(node, list):
+            return [JsonCastle.__substitute_variables(item, vars) for item in node]
 
-        elif isinstance(dct, str):
-            if dct.startswith("${") and dct.endswith("}"):
-                var_name = dct[2:-1]
-                return vars.get(var_name, dct)
+        elif isinstance(node, str):
+            if node.startswith("${") and node.endswith("}"):
+                var_name = node[2:-1]
+                return vars.get(var_name, node)
 
             def repl_var(match):
                 var_name = match.group(1)
                 return str(vars.get(var_name, match.group(0)))
 
-            dct = JsonCastle.__VAR_PATTERN.sub(repl_var, dct)
+            node = JsonCastle.__VAR_PATTERN.sub(repl_var, node)
 
             def repl_env(match):
                 env_name = match.group(1)
                 return os.environ.get(env_name, match.group(0))
 
-            return JsonCastle.__ENV_VAR_PATTERN.sub(repl_env, dct)
+            return JsonCastle.__ENV_VAR_PATTERN.sub(repl_env, node)
 
         else:
-            return dct
+            return node
         
     @staticmethod
-    def __evaluate_python(dct): 
-        if isinstance(dct, dict):
+    def __evaluate_python(node): 
+        if isinstance(node, dict):
             result = {}
-            for k, v in dct.items():
+            for k, v in node.items():
                 result[k] = JsonCastle.__evaluate_python(v)
             return result
         
-        if isinstance(dct, list):
-            return [JsonCastle.__evaluate_python(item) for item in dct]
+        if isinstance(node, list):
+            return [JsonCastle.__evaluate_python(item) for item in node]
         
-        elif isinstance(dct, str):
-            if dct.startswith("{{") and dct.endswith("}}"):
-                expression = dct[2:-2]
+        elif isinstance(node, str):
+            if node.startswith("{{") and node.endswith("}}"):
+                expression = node[2:-2]
                 return str(eval(expression))
 
             def repl_expr(match):
                 expression = match.group(1)
                 return str(eval(expression))
 
-            return JsonCastle.__EXPR_PATTERN.sub(repl_expr, dct)
+            return JsonCastle.__EXPR_PATTERN.sub(repl_expr, node)
         
         else:
-            return dct
+            return node
         
     @staticmethod
-    def __apply_overrides(dct, path, value):
-        current = dct
-
+    def __apply_overrides(items, path, value):
         for i, part in enumerate(path):
             match = JsonCastle.__INDEXER_PATTERN.fullmatch(part)
 
             if match:
                 key, idx = match.group(1), int(match.group(2))
 
-                if key not in current or not isinstance(current[key], list):
-                    current[key] = []
+                if key not in items or not isinstance(items[key], list):
+                    items[key] = []
 
-                while len(current[key]) <= idx:
-                    current[key].append({})
+                while len(items[key]) <= idx:
+                    items[key].append({})
 
                 if i == len(path) - 1:
-                    current[key][idx] = JsonCastle.__cast(value)
+                    items[key][idx] = JsonCastle.__cast(value)
                 else:
-                    current = current[key][idx]
+                    items = items[key][idx]
             else:
                 if i == len(path) - 1:
-                    current[part] = JsonCastle.__cast(value)
+                    items[part] = JsonCastle.__cast(value)
                 else:
-                    if part not in current or not isinstance(current[part], dict):
-                        current[part] = {}
-                    current = current[part]
+                    if part not in items or not isinstance(items[part], dict):
+                        items[part] = {}
+                    items = items[part]
 
     @staticmethod
-    def __add_item(dct, path, new_item):
-        current = dct
-
+    def __add_item(items, path, new_item):
         for part in path[:-1]:
-            if part not in current or not isinstance(current[part], dict):
-                current[part] = {}
-            current = current[part]
+            if part not in items or not isinstance(items[part], dict):
+                items[part] = {}
+            items = items[part]
 
         last = path[-1]
-        if last not in current or not isinstance(current[last], list):
-            current[last] = []
+        if last not in items or not isinstance(items[last], list):
+            items[last] = []
 
-        current[last].append(JsonCastle.__cast(new_item))
+        items[last].append(JsonCastle.__cast(new_item))
 
     @staticmethod
     def __cast(value):
@@ -175,47 +171,45 @@ class JsonCastle:
             return value
             
     @staticmethod
-    def __remove_item(dct, path, value=None):
-        current = dct
-
+    def __remove_item(items, path, value=None):
         for idx, part in enumerate(path):
             match = JsonCastle.__INDEXER_PATTERN.fullmatch(part)
 
             if match:
                 key, index = match.group(1), int(match.group(2))
 
-                if key not in current or not isinstance(current[key], list):
+                if key not in items or not isinstance(items[key], list):
                     return
 
                 if idx == len(path) - 1:
-                    if 0 <= index < len(current[key]):
-                        current[key].pop(index)
+                    if 0 <= index < len(items[key]):
+                        items[key].pop(index)
                     return
                 else:
-                    if 0 <= index < len(current[key]):
-                        current = current[key][index]
+                    if 0 <= index < len(items[key]):
+                        items = items[key][index]
                     else:
                         return           
             else:
                 if idx == len(path) - 1:
                     if value is None:
-                        current.pop(part, None)
+                        items.pop(part, None)
                     else:
-                        current[part].remove(value)
+                        items[part].remove(value)
                     return
                 else:
-                    if part not in current or not isinstance(current[part], dict):
+                    if part not in items or not isinstance(items[part], dict):
                         return
-                    current = current[part]
+                    items = items[part]
 
     @staticmethod
-    def __from_dict(cls, dct):
-        if not is_dataclass(cls) or dct is None:
-            return dct
+    def __instantiate_dataclass(cls, data):
+        if not is_dataclass(cls) or data is None:
+            return data
 
         kwargs = {}
         for f in fields(cls):
-            field_value = dct.get(f.name)
+            field_value = data.get(f.name)
             field_type = f.type
 
             if field_value is None:
@@ -257,6 +251,6 @@ class JsonCastle:
             return {JsonCastle.__convert_value(key_type, k): JsonCastle.__convert_value(val_type, v) for k, v in value.items()}
 
         if is_dataclass(field_type):
-            return JsonCastle.__from_dict(field_type, value)
+            return JsonCastle.__instantiate_dataclass(field_type, value)
 
         return value
