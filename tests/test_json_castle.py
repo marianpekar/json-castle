@@ -80,7 +80,8 @@ TEST_JSON = {
     "expression": "{{1+1}}",
     "expressions": [ 
         "1+1={{1+1}}",
-        "{{__import__('datetime').datetime.today().strftime('%B %d, %Y')}}"
+        "{{__import__('datetime').datetime.today().strftime('%B %d, %Y')}}",
+        "{{${number}+1}}"
     ]
 }
 
@@ -371,6 +372,7 @@ class UnitTests(unittest.TestCase):
         self.assertEqual(item.expression, "2")
         self.assertEqual(item.expressions[0], "1+1=2")
         self.assertEqual(item.expressions[1], dt.date.today().strftime("%B %d, %Y"))
+        self.assertEqual(item.expressions[2], "5.7")
 
 
 if __name__ == '__main__':
