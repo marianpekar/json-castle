@@ -158,3 +158,4 @@ Unit Tests are not just a great way to ensure nothing is broken when a new featu
 * Add support for removing items from a numerical collection by conditions `>`, `<`, `<=` , or `=>`.
 * Add support for removing items by range (i.e. `~items[1:4]` would remove items at indices 1, 2, 3 and 4).
 * Add support for removing custom items by condition (i.e., `~people={age < 16}` would remove from the people collection all objects with the age key-value pair with age less than 16).
+* Add support for datetime expressions in JSON.
