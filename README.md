@@ -5,8 +5,8 @@ JsonCastle is a Python module built on top of the native json module for deseria
 - nested objects
 - JSON variables
 - environment variables
-- Python code injection
-- post-load overrides, including overriding, adding, and removing collection elements via special CLI argument syntax like `node.next_node.number=2`, `~node.tags[0]`, `+node.next_node.tags=foo`, `~node.next_node.tags=buzz`, etc.
+- arbitrary Python expressions
+- post-load overrides, including overriding, adding, and removing collection elements via special [CLI Overrides Syntax](#cli-overrides-syntax) like `node.next_node.number=2`, `~node.tags[0]`, `+node.next_node.tags=foo`, `~node.next_node.tags=buzz`, etc.
 
 With these features, you might find it especially useful in CI/CD pipelines.
 
@@ -164,6 +164,12 @@ The value can be a regex. The following example shows how to remove all items wi
 ```txt
 ~!page.tags="\bpro\w*"
 ```
+
+## Python Expressions
+
+Any string in JSON value between `{{` and `}}` symbols will be treated as an arbitrary Python expression and replaced by the result of [eval()](https://docs.python.org/3/library/functions.html#eval) function converted back to a string.
+
+See the `"expressions"` collection at the bottom of the example JSON in [Getting Started](#getting-started) section.
 
 ## Unit Tests
 
