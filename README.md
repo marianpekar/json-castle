@@ -3,8 +3,9 @@
 JsonCastle is a Python module built on top of the native json module for deserialization from JSON to data classes with additional support for:
 
 - nested objects
-- JSON nariables
+- JSON variables
 - environment variables
+- Python code injection
 - post-load overrides, including overriding, adding, and removing collection elements via special CLI argument syntax like `node.next_node.number=2`, `~node.tags[0]`, `+node.next_node.tags=foo`, `~node.next_node.tags=buzz`, etc.
 
 With these features, you might find it especially useful in CI/CD pipelines.
@@ -27,7 +28,13 @@ Since native json doesn't support variables, such configuration files might have
             "number": 1,
             "tags": ["fizz", "buzz"]
         }
-    }
+    },
+    "$pi": 3.14159,
+    "expressions": [
+        "1+1={{1+1}}",
+        "{{__import__('datetime').datetime.today().strftime('%B %d, %Y')}}",
+        "{{${pi}*2}}"
+    ]
 }
 ```
 
@@ -42,6 +49,7 @@ from dataclasses import dataclass
 class Cfg:
     exe_path: str = None
     node: Node = None
+    expressions: List[str] = None
 
 @dataclass
 class Node:
@@ -69,7 +77,8 @@ If you run the Python script without any arguments, you’d see cfg printed as e
 Cfg(exe_path='C:/users/cicd/debug/mytool.exe',
     node={'next_node': {'number': 1, 'tags': ['fizz', 'buzz']},
           'number': 0,
-          'tags': ['foo', 'bar']})
+          'tags': ['foo', 'bar']},
+    expressions=['1+1=2', 'March 07, 2026', '6.28318'])
 ```
 
 However, by passing `**JsonCastle.parse_args(sys.argv)` as the third argument, you can override any values post-load via CLI. Running the script again with the arguments `node.number=1 ~node.tags[0] node.next_node.number=2 +node.next_node.tags=foo ~node.next_node.tags=buzz` will give you a cfg instance like this:
@@ -78,7 +87,8 @@ However, by passing `**JsonCastle.parse_args(sys.argv)` as the third argument, y
 Cfg(exe_path='C:/users/cicd/debug/mytool.exe',
     node={'next_node': {'number': 2, 'tags': ['fizz', 'foo']},
           'number': 1,
-          'tags': ['bar']})
+          'tags': ['bar']},
+    expressions=['1+1=2', 'March 07, 2026', '6.28318'])
 ```
 
 If you want to deserialize your JSON from a string stream, you can use the static method `load(cls, stream: IO[str], **kwargs)`, the usage is the same as of the `load_from_file(cls, path: str, **kwargs)` in the example above, but you provide your stream as the second argument instead of filepath.

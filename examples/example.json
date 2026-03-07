@@ -9,5 +9,11 @@
             "number": 1,
             "tags": ["fizz", "buzz"]
         }
-    }
+    },
+    "$pi": 3.14159,
+    "expressions": [
+        "1+1={{1+1}}",
+        "{{__import__('datetime').datetime.today().strftime('%B %d, %Y')}}",
+        "{{${pi}*2}}"
+    ]
 }
