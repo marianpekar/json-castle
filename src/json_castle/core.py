@@ -205,6 +205,8 @@ class JsonCastle:
     @staticmethod
     def __instantiate_dataclass(cls, data):
         if not is_dataclass(cls) or data is None:
+            import warnings
+            warnings.warn(f"{cls} is not a data class. Returning data as is", UserWarning)
             return data
 
         kwargs = {}
