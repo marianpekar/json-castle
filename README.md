@@ -6,7 +6,7 @@ JsonCastle is a Python module built on top of the native json module for deseria
 - JSON variables
 - environment variables
 - arbitrary Python expressions
-- post-load overrides, including overriding, adding, and removing collection elements via special [CLI Overrides Syntax](#cli-overrides-syntax) like `node.next_node.number=2`, `~node.tags[0]`, `+node.next_node.tags=foo`, `~node.next_node.tags=buzz`, etc.
+- post-load overrides, including overriding, adding, and removing collection elements via special [CLI Overrides Syntax](#cli-overrides-syntax) like `node.next_node.number=2`, `~node.tags[0]`, `~node.tags[1:3]`, `+node.next_node.tags=foo`, `~node.next_node.tags=buzz`, etc.
 
 With these features, you might find it especially useful in CI/CD pipelines.
 
@@ -135,7 +135,7 @@ When you wish to add a new item to a collection, you prefix the `key=value` pair
 +page.tags=python
 ```
 
-#### Removing an Item by Index
+#### Removing an Item at Index
 
 If you wish to remove an item at specific index, you prefix a path to the collection with index in square brackets of the element you wish to remove with the `~` symbol. The following example shows how to remove the second item from the tags collection nested in the page object.
 
@@ -144,6 +144,17 @@ If you wish to remove an item at specific index, you prefix a path to the collec
 ```
 
 If any items follow the removed one, they will be pushed down, and the new length of the collection will be n-1.
+
+#### Removing Items by Range
+
+You can also remove multiple items by using a slice syntax. The following examples show how to remove all elements except the first one in the `tags` collection nested in the `page` object, how to remove all but the last two elements, and how to remove elements at index 1, 2, and 3, and all elements respectively.
+
+```txt
+~page.tags[1:]
+~page.tags[:2]
+~page.tags[1:3]
+~page.tags[:]
+```
 
 #### Removing an Item by Value (Supports Regular Expressions)
 
@@ -183,6 +194,6 @@ Unit Tests are not just a great way to ensure nothing is broken when a new featu
 * ~~Add regex support for removing items by value.~~ ✅
 * ~~When removing an item from a collection by value, let the user decide whether they want to remove just one or all items that match the value (`~page.tags=programming` removes the first; `~!page.tags=programming` removes all).~~ ✅
 * Add support for removing items from a numerical collection by conditions `>`, `<`, `<=` , or `=>`.
-* Add support for removing items by range (i.e. `~items[1:4]` would remove items at indices 1, 2, 3 and 4).
+* ~~Add support for removing items by range (i.e. `~items[1:4]` would remove items at indices 1, 2, 3 and 4).~~ ✅
 * Add support for removing custom items by condition (i.e., `~people={age < 16}` would remove from the people collection all objects with the age key-value pair with age less than 16).
 * ~~Add support for datetime expressions in JSON.~~ ✅

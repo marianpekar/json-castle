@@ -13,6 +13,7 @@ class JsonCastle:
     __VAR_PATTERN = re.compile(r"\$\{(\w+)\}")
     __ENV_VAR_PATTERN = re.compile(r"%(\w+)%")
     __INDEXER_PATTERN = re.compile(r"(\w+)\[(\d+)\]")
+    __INDEXER_SLICE_PATTERN = re.compile(r"(\w+)\[(\d*):(\d*)\]")
     __EXPR_PATTERN = re.compile(r"\{\{(.*?)\}\}")
      
     @staticmethod
@@ -176,8 +177,27 @@ class JsonCastle:
     @staticmethod
     def __remove_item(items, path, value=None, remove_all=False):
         for idx, part in enumerate(path):
-            match = JsonCastle.__INDEXER_PATTERN.fullmatch(part)
 
+            match = JsonCastle.__INDEXER_SLICE_PATTERN.match(part)
+            if match:
+                key, start, end = match.groups()
+
+                if key not in items or not isinstance(items[key], list):
+                    return
+
+                start = int(start) if start else None
+                end = int(end) if end else None
+                if start is not None and end is not None:
+                    items[key] = items[key][:start] + items[key][end + 1:]
+                elif start is not None and end is None:
+                    items[key] = items[key][:start]
+                elif start is None and end is not None:
+                    items[key] = items[key][end + 1:]
+                else:
+                    items[key] = []
+                return
+
+            match = JsonCastle.__INDEXER_PATTERN.fullmatch(part)
             if match:
                 key, index = match.group(1), int(match.group(2))
 
