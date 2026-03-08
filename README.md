@@ -49,7 +49,7 @@ from dataclasses import dataclass
 class Cfg:
     exe_path: str = None
     node: Node = None
-    expressions: List[str] = None
+    expressions: list[str] = None
 
 @dataclass
 class Node:
