@@ -1,4 +1,5 @@
 from dataclasses import is_dataclass, fields
+import math
 from typing import IO, get_origin, get_args, Union
 from enum import Enum
 import os
@@ -219,10 +220,30 @@ class JsonCastle:
                         items.pop(part, None)
                     else:
                         new_items = []
-                        value_regex = re.compile(value)
-                        removed = False   
+                        removed = False
+                        
+                        def is_number(s):
+                            try:
+                                float(s)
+                            except ValueError:
+                                return False
+                            else:
+                                return True
+
+                        if all([is_number(item) for item in items[part]]) and is_number(value):
+                            value = float(value)
+                        else:
+                            value_regex = re.compile(value)
+
                         for item in items[part]:
-                            if value_regex.fullmatch(item) and not removed:
+
+                            if type(value) == float:
+                                value = float(value)
+                                is_found = math.isclose(item, value)
+                            else:
+                                is_found = value_regex.fullmatch(item)
+                                
+                            if is_found and not removed:
                                 if not remove_all:
                                     removed = True
                                 continue

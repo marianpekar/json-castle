@@ -18,6 +18,7 @@ TEST_JSON = {
     "name_with_var": "${fo}o",
     "unit_price": 12.3,
     "quantity_on_hand": 10,
+    "ratings": [ 0, 1.7, 2.2, 3, 4.6, 5 ],
     "category": "${fo}od",
     "active": True,
     "$bool": True,
@@ -473,6 +474,24 @@ class UnitTests(unittest.TestCase):
         self.assertEqual(item.expressions[0], "1+1=2")
         self.assertEqual(item.expressions[1], dt.date.today().strftime("%B %d, %Y"))
         self.assertEqual(item.expressions[2], "5.7")
+
+    def test_remove_list_item_int(self):
+        path = write_temp_json(TEST_JSON)
+        item = JsonCastle.load_from_file(
+            InventoryItem,
+            path,
+            **{"~ratings": "3"}
+        )
+        self.assertEqual(item.ratings, [ 0, 1.7, 2.2, 4.6, 5 ])
+
+    def test_remove_list_item_float(self):
+        path = write_temp_json(TEST_JSON)
+        item = JsonCastle.load_from_file(
+            InventoryItem,
+            path,
+            **{"~ratings": "1.7"}
+        )
+        self.assertEqual(item.ratings, [ 0, 2.2, 3, 4.6, 5 ])
 
 
 if __name__ == '__main__':
