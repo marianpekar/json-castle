@@ -177,43 +177,52 @@ class JsonCastle:
             
     @staticmethod
     def __remove_item(items, path, value=None, remove_all=False):
+
+        def remove_item_by_range(match):
+            key, start, end = match.groups()
+
+            if key not in items or not isinstance(items[key], list):
+                return
+
+            start = int(start) if start else None
+            end = int(end) if end else None
+            if start is not None and end is not None:
+                items[key] = items[key][:start] + items[key][end + 1:]
+            elif start is not None and end is None:
+                items[key] = items[key][:start]
+            elif start is None and end is not None:
+                items[key] = items[key][end + 1:]
+            else:
+                items[key] = []
+
+        def remove_item_at_index(items, match, idx):
+            key, index = match.group(1), int(match.group(2))
+
+            if key not in items or not isinstance(items[key], list):
+                return None, True
+
+            if idx == len(path) - 1:
+                if 0 <= index < len(items[key]):
+                    items[key].pop(index)
+                return items, True
+            else:
+                if 0 <= index < len(items[key]):
+                    return items[key][index], False
+                else:
+                    return None, True
+        
         for idx, part in enumerate(path):
 
             match = JsonCastle.__INDEXER_SLICE_PATTERN.match(part)
             if match:
-                key, start, end = match.groups()
-
-                if key not in items or not isinstance(items[key], list):
-                    return
-
-                start = int(start) if start else None
-                end = int(end) if end else None
-                if start is not None and end is not None:
-                    items[key] = items[key][:start] + items[key][end + 1:]
-                elif start is not None and end is None:
-                    items[key] = items[key][:start]
-                elif start is None and end is not None:
-                    items[key] = items[key][end + 1:]
-                else:
-                    items[key] = []
+                remove_item_by_range(match)
                 return
-
+            
             match = JsonCastle.__INDEXER_PATTERN.fullmatch(part)
             if match:
-                key, index = match.group(1), int(match.group(2))
-
-                if key not in items or not isinstance(items[key], list):
+                items, stop = remove_item_at_index(items, match, idx)
+                if items is None or stop:
                     return
-
-                if idx == len(path) - 1:
-                    if 0 <= index < len(items[key]):
-                        items[key].pop(index)
-                    return
-                else:
-                    if 0 <= index < len(items[key]):
-                        items = items[key][index]
-                    else:
-                        return           
             else:
                 if idx == len(path) - 1:
                     if value is None:
