@@ -199,6 +199,39 @@ Additionally, you can join conditions together with the `&` operator. The follow
 ~ratings=gt1.7&lte4.6
 ```
 
+#### Negation
+
+You can negate the effect of all the CLI arguments that remove items from a collection adding `!` symbol after `~` or `~~`. The following example shows how to basically keep just the programming tag and remove all the others.
+
+```txt
+~!page.tags=programming
+```
+
+This example shows how to keeps the all items that starts with `pro` instead of removing them:
+
+```txt
+~~!page.tags="\bpro\w*"
+```
+
+And this removes from a numberical collection `ratings` all values less or equal than 1.7 or greater than 4.6 (i.e., `[ 0, 1.7, 2.2, 3, 4.6, 5 ] -> [ 2.2, 3, 4.6 ]`)
+
+```txt
+~!ratings=gt1.7&lte4.6
+```
+
+This example shows how to keep just the first element of `suppliers` collection: 
+
+```txt
+~!suppliers[0]
+```
+
+And the last example shows how to remove all the elements except the first two:
+
+```txt
+~!suppliers[1:]
+```
+
+
 ## Python Expressions
 
 Any string in JSON value between `{{` and `}}` symbols will be treated as an arbitrary Python expression and replaced by the result of [eval()](https://docs.python.org/3/library/functions.html#eval) function converted back to a string.

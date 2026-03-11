@@ -49,10 +49,10 @@ class JsonCastle:
             if k.startswith("+"):
                 JsonCastle.__add_item(data, k[1:].split("."), v)
             elif k.startswith("~"):
-                if k[1] == '~':
-                    JsonCastle.__remove_item(data, k[2:].split("."), v, remove_all=True)
-                else:
-                    JsonCastle.__remove_item(data, k[1:].split("."), v)
+                remove_all = k[1:2] == "~"
+                negate = "!" in k
+                prefix_len = 1 + remove_all + negate
+                JsonCastle.__remove_item(data, k[prefix_len:].split("."), v, remove_all=remove_all, negate=negate)
             else:
                 JsonCastle.__apply_overrides(data, k.split("."), v)
 
@@ -176,7 +176,7 @@ class JsonCastle:
         return value
             
     @staticmethod
-    def __remove_item(items, path, value=None, remove_all=False):
+    def __remove_item(items, path, value=None, remove_all=False, negate=False):
 
         def is_number(s):
             try:
@@ -194,14 +194,24 @@ class JsonCastle:
             start = int(start) if start else None
             end = int(end) if end else None
 
-            if start is not None and end is not None:
-                items[key] = items[key][:start] + items[key][end + 1:]
-            elif start is not None:
-                items[key] = items[key][:start]
-            elif end is not None:
-                items[key] = items[key][end + 1:]
+            if negate:
+                if start is not None and end is not None:
+                    items[key] = items[key][start:end + 1]
+                elif start is not None:
+                    items[key] = items[key][start:]
+                elif end is not None:
+                    items[key] = items[key][:end + 1]
+                else:
+                    items[key] = []
             else:
-                items[key] = []
+                if start is not None and end is not None:
+                    items[key] = items[key][:start] + items[key][end + 1:]
+                elif start is not None:
+                    items[key] = items[key][:start]
+                elif end is not None:
+                    items[key] = items[key][end + 1:]
+                else:
+                    items[key] = []
 
         def remove_item_at_index(current, match, idx):
             key, index = match.group(1), int(match.group(2))
@@ -211,7 +221,10 @@ class JsonCastle:
 
             if idx == len(path) - 1:
                 if 0 <= index < len(current[key]):
-                    current[key].pop(index)
+                    if negate:
+                        current[key] = [current[key][index]]
+                    else:
+                        current[key].pop(index)
                 return current, True
 
             if 0 <= index < len(current[key]):
@@ -244,9 +257,11 @@ class JsonCastle:
                 parsed = [parse_operator_token(t) for t in tokens]
 
                 if all(p is not None for p in parsed):
+                    def matches_all(item):
+                        return is_number(item) and all(pred(float(item), threshold) for pred, threshold in parsed)
                     current[part] = [
                         item for item in target_list
-                        if not (is_number(item) and all(pred(float(item), threshold) for pred, threshold in parsed))
+                        if matches_all(item) ^ (not negate)
                     ]
                     return
 
@@ -258,16 +273,23 @@ class JsonCastle:
                 value_regex = re.compile(value)
 
             new_items = []
-            removed = False
+            kept_one = False
             for item in target_list:
                 if value_regex is not None:
                     is_found = bool(value_regex.fullmatch(item))
                 else:
                     is_found = math.isclose(float(item), normalized_value)
 
-                if is_found and (remove_all or not removed):
-                    removed = True
-                    continue
+                if negate:
+                    should_keep = is_found and (remove_all or not kept_one)
+                    if should_keep:
+                        kept_one = True
+                    else:
+                        continue
+                else:
+                    if is_found and (remove_all or not kept_one):
+                        kept_one = True
+                        continue
 
                 new_items.append(item)
 

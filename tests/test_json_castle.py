@@ -301,6 +301,16 @@ class UnitTests(unittest.TestCase):
         self.assertEqual(len(item.suppliers), 3)
         self.assertEqual(item.suppliers[0].name, "Euro Trade")
 
+    def test_remove_custom_list_item_negate(self):
+        path = write_temp_json(TEST_JSON)
+        item = JsonCastle.load_from_file(
+            InventoryItem,
+            path,
+            **{"~!suppliers[0]": ""}
+        )
+        self.assertEqual(len(item.suppliers), 1)
+        self.assertEqual(item.suppliers[0].name, "Global Supplies")
+
     def test_remove_tuple_item(self):
         path = write_temp_json(TEST_JSON)
         item = JsonCastle.load_from_file(
@@ -318,8 +328,16 @@ class UnitTests(unittest.TestCase):
             path,
             **{"~elements[1:]": ""}
         )
-        self.assertEqual(len(item.elements), 1)
         self.assertEqual(item.elements, ["foo"])
+
+    def test_remove_list_items_by_range_from_left_negate(self):
+        path = write_temp_json(TEST_JSON)
+        item = JsonCastle.load_from_file(
+            InventoryItem,
+            path,
+            **{"~!elements[1:]": ""}
+        )
+        self.assertEqual(item.elements, ["foo", "bar", "bar", "fizz"])
 
     def test_remove_list_items_by_range_from_right(self):
         path = write_temp_json(TEST_JSON)
@@ -328,8 +346,16 @@ class UnitTests(unittest.TestCase):
             path,
             **{"~elements[:2]": ""}
         )
-        self.assertEqual(len(item.elements), 2)
         self.assertEqual(item.elements, [ "bar", "fizz" ])
+
+    def test_remove_list_items_by_range_from_right_negate(self):
+        path = write_temp_json(TEST_JSON)
+        item = JsonCastle.load_from_file(
+            InventoryItem,
+            path,
+            **{"~!elements[:2]": ""}
+        )
+        self.assertEqual(item.elements, [ "foo", "foo", "bar" ])
     
     def test_remove_list_items_by_range(self):
         path = write_temp_json(TEST_JSON)
@@ -340,6 +366,15 @@ class UnitTests(unittest.TestCase):
         )
         self.assertEqual(len(item.elements), 2)
         self.assertEqual(item.elements, [ "foo", "fizz" ])
+
+    def test_remove_list_items_by_range_negate(self):
+        path = write_temp_json(TEST_JSON)
+        item = JsonCastle.load_from_file(
+            InventoryItem,
+            path,
+            **{"~!elements[1:3]": ""}
+        )
+        self.assertEqual(item.elements, [ "foo", "bar", "bar" ])
 
     def test_remove_all_list_items_by_range(self):
         path = write_temp_json(TEST_JSON)
@@ -357,7 +392,6 @@ class UnitTests(unittest.TestCase):
             path,
             **{"~supplier.elements[1:]": ""}
         )
-        self.assertEqual(len(item.supplier.elements), 1)
         self.assertEqual(item.supplier.elements, ["foo"])
 
     def test_remove_list_items_by_range_from_right_in_list(self):
@@ -367,7 +401,6 @@ class UnitTests(unittest.TestCase):
             path,
             **{"~suppliers[0].elements[:2]": ""}
         )
-        self.assertEqual(len(item.suppliers[0].elements), 2)
         self.assertEqual(item.suppliers[0].elements, [ "bar", "fizz" ])
 
     def test_remove_list_item_by_val(self):
@@ -377,8 +410,16 @@ class UnitTests(unittest.TestCase):
             path,
             **{"~elements": "foo"}
         )
-        self.assertEqual(len(item.elements), 4)
         self.assertEqual(item.elements, ["foo", "bar", "bar", "fizz"])
+
+    def test_remove_list_item_by_val_negate(self):
+        path = write_temp_json(TEST_JSON)
+        item = JsonCastle.load_from_file(
+            InventoryItem,
+            path,
+            **{"~!elements": "foo"}
+        )
+        self.assertEqual(item.elements, [ "foo" ])
 
     def test_remove_list_item_by_regex(self):
         path = write_temp_json(TEST_JSON)
@@ -387,7 +428,6 @@ class UnitTests(unittest.TestCase):
             path,
             **{"~elements": r"\bf\w*"}
         )
-        self.assertEqual(len(item.elements), 4)
         self.assertEqual(item.elements, ["foo", "bar", "bar", "fizz"])
 
     def test_remove_all_list_items_by_val(self):
@@ -397,8 +437,16 @@ class UnitTests(unittest.TestCase):
             path,
             **{"~~elements": "bar"}
         )
-        self.assertEqual(len(item.elements), 3)
         self.assertEqual(item.elements, ["foo", "foo", "fizz"])
+
+    def test_remove_all_list_items_by_val_negate(self):
+        path = write_temp_json(TEST_JSON)
+        item = JsonCastle.load_from_file(
+            InventoryItem,
+            path,
+            **{"~~!elements": "bar"}
+        )
+        self.assertEqual(item.elements, [ "bar", "bar" ])
 
     def test_remove_all_list_items_by_regex(self):
         path = write_temp_json(TEST_JSON)
@@ -407,8 +455,16 @@ class UnitTests(unittest.TestCase):
             path,
             **{"~~elements": r"\bf\w*"}
         )
-        self.assertEqual(len(item.elements), 2)
         self.assertEqual(item.elements, ["bar", "bar"])
+
+    def test_remove_all_list_items_by_regex_negate(self):
+        path = write_temp_json(TEST_JSON)
+        item = JsonCastle.load_from_file(
+            InventoryItem,
+            path,
+            **{"~~!elements": r"\bf\w*"}
+        )
+        self.assertEqual(item.elements, [ "foo", "foo", "fizz" ])
 
     def test_remove_tuple_item_by_val(self):
         path = write_temp_json(TEST_JSON)
@@ -417,8 +473,7 @@ class UnitTests(unittest.TestCase):
             path,
             **{"~tags": "fizz"}
         )
-        self.assertEqual(len(item.tags), 1)
-        self.assertEqual(item.tags[0], "buzz")
+        self.assertEqual(item.tags, ("buzz",))
 
     def test_remove_all_tuple_items(self):
         path = write_temp_json(TEST_JSON)
@@ -436,7 +491,6 @@ class UnitTests(unittest.TestCase):
             path,
             **{"~supplier.elements": "foo"}
         )
-        self.assertEqual(len(item.supplier.elements), 4)
         self.assertEqual(item.supplier.elements, ["foo", "bar", "bar", "fizz"])
 
     def test_remove_tuple_item_by_val_nested(self):
@@ -446,8 +500,7 @@ class UnitTests(unittest.TestCase):
             path,
             **{"~supplier.tags": "fizz"}
         )
-        self.assertEqual(len(item.supplier.tags), 1)
-        self.assertEqual(item.supplier.tags[0], "buzz")
+        self.assertEqual(item.supplier.tags, ("buzz",))
 
 
     def test_remove_list_item_by_val_in_list(self):
@@ -457,7 +510,6 @@ class UnitTests(unittest.TestCase):
             path,
             **{"~suppliers[0].elements": "foo"}
         )
-        self.assertEqual(len(item.suppliers[0].elements), 4)
         self.assertEqual(item.suppliers[0].elements, ["foo", "bar", "bar", "fizz"])
 
     def test_remove_tuple_item_by_val_in_list(self):
@@ -467,8 +519,7 @@ class UnitTests(unittest.TestCase):
             path,
             **{"~suppliers[0].tags": "fizz"}
         )
-        self.assertEqual(len(item.suppliers[0].tags), 1)
-        self.assertEqual(item.suppliers[0].tags[0], "buzz")
+        self.assertEqual(item.suppliers[0].tags, ("buzz",))
 
     def test_evaluate_python_expressions(self):
         path = write_temp_json(TEST_JSON)
@@ -559,6 +610,15 @@ class UnitTests(unittest.TestCase):
         )
         self.assertEqual(item.suppliers[0].ratings, [ 0, 2.2, 3, 4.6, 5 ])
 
+    def test_remove_list_items_float_nested_in_collection_negate(self):
+        path = write_temp_json(TEST_JSON)
+        item = JsonCastle.load_from_file(
+            InventoryItem,
+            path,
+            **{"~!suppliers[0].ratings": "1.7"}
+        )
+        self.assertEqual(item.suppliers[0].ratings, [ 1.7 ])
+
     def test_remove_list_item_greater_than_float_nested_in_collection(self):
         path = write_temp_json(TEST_JSON)
         item = JsonCastle.load_from_file(
@@ -585,6 +645,25 @@ class UnitTests(unittest.TestCase):
             **{"~suppliers[0].ratings": "gt1.7&lte4.6"}
         )
         self.assertEqual(item.suppliers[0].ratings, [ 0, 1.7, 5 ])
+
+    def test_remove_list_items_greater_than_and_less_than_float_negate(self):
+        path = write_temp_json(TEST_JSON)
+        item = JsonCastle.load_from_file(
+            InventoryItem,
+            path,
+            **{"~!ratings": "gt1&lt4"}
+        )
+        self.assertEqual(item.ratings, [ 1.7, 2.2, 3 ])
+
+    def test_remove_list_item_greater_than_and_less_than_or_equal_float_nested_in_collection_negate(self):
+        path = write_temp_json(TEST_JSON)
+        item = JsonCastle.load_from_file(
+            InventoryItem,
+            path,
+            **{"~!suppliers[0].ratings": "gt1.7&lte4.6"}
+        )
+        self.assertEqual(item.suppliers[0].ratings, [ 2.2, 3, 4.6 ])
+
 
 
 
