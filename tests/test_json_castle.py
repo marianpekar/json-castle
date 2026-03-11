@@ -568,6 +568,24 @@ class UnitTests(unittest.TestCase):
         )
         self.assertEqual(item.suppliers[0].ratings, [ 0, 1.7, 2.2, 3 ])
 
+    def test_remove_list_items_greater_than_and_less_than_float(self):
+        path = write_temp_json(TEST_JSON)
+        item = JsonCastle.load_from_file(
+            InventoryItem,
+            path,
+            **{"~ratings": "gt1&lt4"}
+        )
+        self.assertEqual(item.ratings, [ 0, 4.6, 5 ])
+
+    def test_remove_list_item_greater_than_and_less_than_or_equal_float_nested_in_collection(self):
+        path = write_temp_json(TEST_JSON)
+        item = JsonCastle.load_from_file(
+            InventoryItem,
+            path,
+            **{"~suppliers[0].ratings": "gt1.7&lte4.6"}
+        )
+        self.assertEqual(item.suppliers[0].ratings, [ 0, 1.7, 5 ])
+
 
 
 if __name__ == '__main__':

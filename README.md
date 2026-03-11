@@ -193,6 +193,12 @@ From numerical collections, you can remove all values that are less than (`lt`),
 ~suppliers[0].ratings=gte3
 ```
 
+Additionally, you can join conditions together with the `&` operator. The following example shows how to remove all items from the `ratings` collection with values greater than `1.7` and less than or equal to `4.6` (i.e., `[ 0, 1.7, 2.2, 3, 4.6, 5 ] -> [ 0, 1.7, 5 ]`).
+
+```txt
+~ratings=gt1.7&lte4.6
+```
+
 ## Python Expressions
 
 Any string in JSON value between `{{` and `}}` symbols will be treated as an arbitrary Python expression and replaced by the result of [eval()](https://docs.python.org/3/library/functions.html#eval) function converted back to a string.
