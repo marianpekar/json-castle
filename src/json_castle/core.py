@@ -178,6 +178,13 @@ class JsonCastle:
     @staticmethod
     def __remove_item(items, path, value=None, remove_all=False):
 
+        def is_number(s):
+            try:
+                float(s)
+                return True
+            except (ValueError, TypeError):
+                return False
+
         def remove_item_by_range(match):
             key, start, end = match.groups()
 
@@ -186,84 +193,84 @@ class JsonCastle:
 
             start = int(start) if start else None
             end = int(end) if end else None
+
             if start is not None and end is not None:
                 items[key] = items[key][:start] + items[key][end + 1:]
-            elif start is not None and end is None:
+            elif start is not None:
                 items[key] = items[key][:start]
-            elif start is None and end is not None:
+            elif end is not None:
                 items[key] = items[key][end + 1:]
             else:
                 items[key] = []
 
-        def remove_item_at_index(items, match, idx):
+        def remove_item_at_index(current, match, idx):
             key, index = match.group(1), int(match.group(2))
 
-            if key not in items or not isinstance(items[key], list):
+            if key not in current or not isinstance(current[key], list):
                 return None, True
 
             if idx == len(path) - 1:
-                if 0 <= index < len(items[key]):
-                    items[key].pop(index)
-                return items, True
+                if 0 <= index < len(current[key]):
+                    current[key].pop(index)
+                return current, True
+
+            if 0 <= index < len(current[key]):
+                return current[key][index], False
+            return None, True
+
+        def remove_item_by_value(current, part):
+            target_list = current.get(part)
+            if not isinstance(target_list, list):
+                return
+
+            normalized_value = value
+            value_regex = None
+            if is_number(value) and all(is_number(item) for item in target_list):
+                normalized_value = float(value)
             else:
-                if 0 <= index < len(items[key]):
-                    return items[key][index], False
+                value_regex = re.compile(value)
+
+            new_items = []
+            removed = False
+            for item in target_list:
+                if value_regex is not None:
+                    is_found = bool(value_regex.fullmatch(item))
                 else:
-                    return None, True
-        
+                    is_found = math.isclose(float(item), normalized_value)
+
+                if is_found and (remove_all or not removed):
+                    removed = True
+                    continue
+
+                new_items.append(item)
+
+            current[part] = new_items
+
         for idx, part in enumerate(path):
+            is_last = idx == len(path) - 1
 
             match = JsonCastle.__INDEXER_SLICE_PATTERN.match(part)
             if match:
                 remove_item_by_range(match)
                 return
-            
+
             match = JsonCastle.__INDEXER_PATTERN.fullmatch(part)
             if match:
                 items, stop = remove_item_at_index(items, match, idx)
                 if items is None or stop:
                     return
-            else:
-                if idx == len(path) - 1:
-                    if value is None:
-                        items.pop(part, None)
-                    else:
-                        new_items = []
-                        removed = False
-                        
-                        def is_number(s):
-                            try:
-                                float(s)
-                            except ValueError:
-                                return False
-                            else:
-                                return True
+                continue
 
-                        if all([is_number(item) for item in items[part]]) and is_number(value):
-                            value = float(value)
-                        else:
-                            value_regex = re.compile(value)
-
-                        for item in items[part]:
-
-                            if type(value) == float:
-                                value = float(value)
-                                is_found = math.isclose(item, value)
-                            else:
-                                is_found = value_regex.fullmatch(item)
-                                
-                            if is_found and not removed:
-                                if not remove_all:
-                                    removed = True
-                                continue
-
-                            new_items.append(item)    
-                            items[part] = new_items
-                    return
+            if is_last:
+                if value is None:
+                    items.pop(part, None)
                 else:
-                    if part not in items or not isinstance(items[part], dict):
-                        return
-                    items = items[part]
+                    remove_item_by_value(items, part)
+                return
+
+            if part not in items or not isinstance(items[part], dict):
+                return
+            items = items[part]
 
     @staticmethod
     def __instantiate_dataclass(cls, data):
