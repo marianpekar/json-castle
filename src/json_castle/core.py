@@ -168,12 +168,12 @@ class JsonCastle:
         if value.lower() in ("true", "false"):
             return value.lower() == "true"
 
-        try:
-            if "." in value:
-                return float(value)
-            return int(value)
-        except ValueError:
-            return value
+        for fn in (int, float):
+            try:
+                return fn(value)
+            except ValueError:
+                pass
+        return value
             
     @staticmethod
     def __remove_item(items, path, value=None, remove_all=False):
