@@ -182,6 +182,17 @@ The value can be a regex. The following example shows how to remove all items wi
 ~!page.tags="\bpro\w*"
 ```
 
+#### Removing Numerical Items by Condition
+
+From numerical collections, you can remove all values that are less than (`lt`), less than or equal (`lte`), greater than (`gt`), or greater than or equal (`gte`) to a value on the right side of the argument. The following examples show how to remove values less than, less than or equal, greater than, and greater than or equal to `3` from the `ratings` collection, which itself is a property of the first supplier in the `suppliers` collection.
+
+```txt
+~suppliers[0].ratings=lt3
+~suppliers[0].ratings=lte3
+~suppliers[0].ratings=gt3
+~suppliers[0].ratings=gte3
+```
+
 ## Python Expressions
 
 Any string in JSON value between `{{` and `}}` symbols will be treated as an arbitrary Python expression and replaced by the result of [eval()](https://docs.python.org/3/library/functions.html#eval) function converted back to a string.
@@ -199,7 +210,7 @@ Unit Tests are not just a great way to ensure nothing is broken when a new featu
 * Extend the `parse_args` method to allow adding a custom object to a collection.
 * ~~Add regex support for removing items by value.~~ ✅
 * ~~When removing an item from a collection by value, let the user decide whether they want to remove just one or all items that match the value (`~page.tags=programming` removes the first; `~!page.tags=programming` removes all).~~ ✅
-* Add support for removing items from a numerical collection by conditions `>`, `<`, `<=` , or `=>`.
+* ~~Add support for removing items from a numerical collection by conditions `>`, `<`, `<=` , or `=>`.~~ ✅
 * ~~Add support for removing items by range (i.e. `~items[1:4]` would remove items at indices 1, 2, 3 and 4).~~ ✅
 * Add support for removing custom items by condition (i.e., `~people={age < 16}` would remove from the people collection all objects with the age key-value pair with age less than 16).
 * ~~Add support for datetime expressions in JSON.~~ ✅

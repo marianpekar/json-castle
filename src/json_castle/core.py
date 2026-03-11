@@ -222,6 +222,26 @@ class JsonCastle:
             target_list = current.get(part)
             if not isinstance(target_list, list):
                 return
+            
+            OPERATORS = {
+                "lte": lambda item, t: item <= t,
+                "gte": lambda item, t: item >= t,
+                "lt":  lambda item, t: item < t,
+                "gt":  lambda item, t: item > t,
+            }
+
+            if isinstance(value, str):
+                for op, predicate in OPERATORS.items():
+                    if value.startswith(op):
+                        operand = value[len(op):]
+                        if not is_number(operand):
+                            return
+                        threshold = float(operand)
+                        current[part] = [
+                            item for item in target_list
+                            if not (is_number(item) and predicate(float(item), threshold))
+                        ]
+                        return
 
             normalized_value = value
             value_regex = None

@@ -38,6 +38,7 @@ TEST_JSON = {
         "active": True,
         "elements": [ "foo", "foo", "bar", "bar", "fizz" ],
         "tags": [ "fizz", "buzz" ],
+        "ratings": [ 0, 1.7, 2.2, 3, 4.6, 5 ],
     },
     "supplier2": {
         "name": "${euro_trail}",
@@ -55,6 +56,7 @@ TEST_JSON = {
             "active": True,
             "elements": [ "foo", "foo", "bar", "bar", "fizz" ],
             "tags": [ "fizz", "buzz" ],
+            "ratings": [ 0, 1.7, 2.2, 3, 4.6, 5 ]
         },
         {
             "name": "Euro Trade",
@@ -101,6 +103,7 @@ class Supplier:
     tags: tuple[str, ...] = ()
     elements_with_vars: list[str] = None
     tags_with_vars: tuple[str, ...] = ()
+    ratings: list[int] = None
 
 @dataclass
 class InventoryItem:
@@ -492,6 +495,79 @@ class UnitTests(unittest.TestCase):
             **{"~ratings": "1.7"}
         )
         self.assertEqual(item.ratings, [ 0, 2.2, 3, 4.6, 5 ])
+
+    def test_remove_list_items_less_than_float(self):
+        path = write_temp_json(TEST_JSON)
+        item = JsonCastle.load_from_file(
+            InventoryItem,
+            path,
+            **{"~ratings": "lt3"}
+        )
+        self.assertEqual(item.ratings, [ 3, 4.6, 5 ])
+
+    def test_remove_list_items_less_than_or_equal_float(self):
+        path = write_temp_json(TEST_JSON)
+        item = JsonCastle.load_from_file(
+            InventoryItem,
+            path,
+            **{"~ratings": "lte3"}
+        )
+        self.assertEqual(item.ratings, [ 4.6, 5 ])
+
+    def test_remove_list_items_greater_than_float(self):
+        path = write_temp_json(TEST_JSON)
+        item = JsonCastle.load_from_file(
+            InventoryItem,
+            path,
+            **{"~ratings": "gt3"}
+        )
+        self.assertEqual(item.ratings, [ 0, 1.7, 2.2, 3 ])
+
+    def test_remove_list_items_greater_than_or_equal_float(self):
+        path = write_temp_json(TEST_JSON)
+        item = JsonCastle.load_from_file(
+            InventoryItem,
+            path,
+            **{"~ratings": "gte3"}
+        )
+        self.assertEqual(item.ratings, [ 0, 1.7, 2.2 ])
+
+    def test_remove_list_item_float_nested(self):
+        path = write_temp_json(TEST_JSON)
+        item = JsonCastle.load_from_file(
+            InventoryItem,
+            path,
+            **{"~supplier.ratings": "1.7"}
+        )
+        self.assertEqual(item.supplier.ratings, [ 0, 2.2, 3, 4.6, 5 ])
+
+    def test_remove_list_items_less_than_float_nested(self):
+        path = write_temp_json(TEST_JSON)
+        item = JsonCastle.load_from_file(
+            InventoryItem,
+            path,
+            **{"~supplier.ratings": "lt3"}
+        )
+        self.assertEqual(item.supplier.ratings, [ 3, 4.6, 5 ])
+
+    def test_remove_list_items_float_nested_in_collection(self):
+        path = write_temp_json(TEST_JSON)
+        item = JsonCastle.load_from_file(
+            InventoryItem,
+            path,
+            **{"~suppliers[0].ratings": "1.7"}
+        )
+        self.assertEqual(item.suppliers[0].ratings, [ 0, 2.2, 3, 4.6, 5 ])
+
+    def test_remove_list_item_greater_than_float_nested_in_collection(self):
+        path = write_temp_json(TEST_JSON)
+        item = JsonCastle.load_from_file(
+            InventoryItem,
+            path,
+            **{"~suppliers[0].ratings": "gt3"}
+        )
+        self.assertEqual(item.suppliers[0].ratings, [ 0, 1.7, 2.2, 3 ])
+
 
 
 if __name__ == '__main__':
