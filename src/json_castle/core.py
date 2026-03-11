@@ -49,7 +49,7 @@ class JsonCastle:
             if k.startswith("+"):
                 JsonCastle.__add_item(data, k[1:].split("."), v)
             elif k.startswith("~"):
-                if k[1] == '!':
+                if k[1] == '~':
                     JsonCastle.__remove_item(data, k[2:].split("."), v, remove_all=True)
                 else:
                     JsonCastle.__remove_item(data, k[1:].split("."), v)

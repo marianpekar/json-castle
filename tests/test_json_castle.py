@@ -395,7 +395,7 @@ class UnitTests(unittest.TestCase):
         item = JsonCastle.load_from_file(
             InventoryItem,
             path,
-            **{"~!elements": "bar"}
+            **{"~~elements": "bar"}
         )
         self.assertEqual(len(item.elements), 3)
         self.assertEqual(item.elements, ["foo", "foo", "fizz"])
@@ -405,7 +405,7 @@ class UnitTests(unittest.TestCase):
         item = JsonCastle.load_from_file(
             InventoryItem,
             path,
-            **{"~!elements": r"\bf\w*"}
+            **{"~~elements": r"\bf\w*"}
         )
         self.assertEqual(len(item.elements), 2)
         self.assertEqual(item.elements, ["bar", "bar"])

@@ -170,16 +170,16 @@ If you wish to remove an item of a specific value, instead of the index as descr
 ~page.tags=programming
 ```
 
-If there is more than one occurrence of the `programming` string in the collection, only the first one will be removed. If you want to remove all occurrences, add `!` after `~`:
+If there is more than one occurrence of the `programming` string in the collection, only the first one will be removed. If you want to remove **all** occurrences, use `~~` instead of just one `~`:
 
 ```txt
-~!page.tags=programming
+~~page.tags=programming
 ```
 
 The value can be a regex. The following example shows how to remove all items with a value of a single word that starts with `pro`:
 
 ```txt
-~!page.tags="\bpro\w*"
+~~page.tags="\bpro\w*"
 ```
 
 #### Removing Numerical Items by Condition
