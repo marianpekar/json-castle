@@ -199,27 +199,27 @@ Additionally, you can join conditions together with the `&` operator. The follow
 ~ratings=gt1.7&lte4.6
 ```
 
-#### Negation
+#### Flipping An Argument (Negation)
 
-You can negate the effect of all the CLI arguments that remove items from a collection adding `!` symbol after `~` or `~~`. The following example shows how to basically keep just the programming tag and remove all the others.
+When removing items from a collection, you can also negate the effect by adding the `!` symbol after `~` or `~~`. The following example shows how to effectively keep just the first `programming` tag and remove all the others from the `tags` collection nested in the `page` object. Which is the exact opposite of what you can see in the first example above in [Removing an Item by Value](#removing-an-item-by-value-supports-regular-expressions) section, where the first occurrence of `programming` was removed and the rest of the items were kept.
 
 ```txt
 ~!page.tags=programming
 ```
 
-This example shows how to keeps the all items that starts with `pro` instead of removing them:
+This example shows how to keep all items that start with string `pro` (by regex):
 
 ```txt
 ~~!page.tags="\bpro\w*"
 ```
 
-And this removes from a numberical collection `ratings` all values less or equal than 1.7 or greater than 4.6 (i.e., `[ 0, 1.7, 2.2, 3, 4.6, 5 ] -> [ 2.2, 3, 4.6 ]`)
+The following example shows how to remove from a numerical collection `ratings` all values less than or equal to `1.7` or greater than `4.6` (i.e., `[ 0, 1.7, 2.2, 3, 4.6, 5 ] -> [ 2.2, 3, 4.6 ]`):
 
 ```txt
 ~!ratings=gt1.7&lte4.6
 ```
 
-This example shows how to keep just the first element of `suppliers` collection: 
+This example shows how to effectively keep just the first element of the suppliers collection:
 
 ```txt
 ~!suppliers[0]
@@ -230,7 +230,6 @@ And the last example shows how to remove all the elements except the first two:
 ```txt
 ~!suppliers[1:]
 ```
-
 
 ## Python Expressions
 
