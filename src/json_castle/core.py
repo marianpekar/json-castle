@@ -77,9 +77,9 @@ class JsonCastle:
             return [JsonCastle.__substitute_variables(item, vars) for item in node]
 
         elif isinstance(node, str):
-            if node.startswith("${") and node.endswith("}"):
-                var_name = node[2:-1]
-                return vars.get(var_name, node)
+            match = JsonCastle.__VAR_PATTERN.fullmatch(node)
+            if match:
+                return vars.get(match.group(1), node)
 
             def repl_var(match):
                 var_name = match.group(1)

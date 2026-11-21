@@ -31,6 +31,7 @@ TEST_JSON = {
     "elements_with_vars": ["${fo}o", "${bar}"],
     "tags_with_vars": ["${fizz}", "${buzz}"],
     "supplier_name": "${euro_trail}",
+    "multiple_vars": "${fizz} and ${buzz} ${number}",
     "supplier": {
         "name": "${global_supplies}",
         "country": "USA",
@@ -121,6 +122,7 @@ class InventoryItem:
     elements_with_dups: list[str] = None
     tags: tuple[str, ...] = ()
     elements_with_vars: list[str] = None
+    multiple_vars: str = None
     tags_with_vars: tuple[str, ...] = ()
     ratings: list[int] = None
     category: ItemCategory = ItemCategory.OTHER
@@ -211,6 +213,10 @@ class VariableSubstitutionTests(BaseTest):
         self.assertEqual(item.suppliers[2].rating, 4.7)
         self.assertEqual(item.suppliers[2].elements_with_vars, ["foo", "bar"])
         self.assertEqual(item.suppliers[2].tags_with_vars, ("fizz", "buzz"))
+
+    def test_multiple_variables(self):
+        item = self._load()
+        self.assertEqual(item.multiple_vars, "fizz and buzz 4.7")
 
     def test_chained_variable(self):
         item = self._load()
