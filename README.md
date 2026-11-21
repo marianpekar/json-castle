@@ -5,7 +5,7 @@ JsonCastle is a Python module built on top of the native json module for deseria
 - nested objects
 - JSON variables
 - environment variables
-- arbitrary Python expressions
+- arbitrary Python expressions (can be "turned off")
 - post-load overrides, including overriding, adding, and removing collection elements via special [CLI Overrides Syntax](#cli-overrides-syntax) like `node.next_node.number=2`, `~node.tags[0]`, `~node.tags[1:3]`, `+node.next_node.tags=foo`, `~node.next_node.tags=buzz`, etc.
 
 With these features, you might find it especially useful in CI/CD pipelines.
@@ -98,6 +98,10 @@ Optionally, you can pass a second parameter to the `JsonCastle.parse_args` metho
 ```python
 cfg = JsonCastle.load_from_file(Cfg, sys.argv[1], **JsonCastle.parse_args(sys.argv, 2))
 ```
+
+## Safe Load 
+
+To deserialize your JSON from a string stream or file while ignoring Python expressions, effectively bybassing `data = JsonCastle.__evaluate_python(data)` in `JsonCastle.load` function, use wrapper functions `safe_load(cls, stream: IO[str], **kwargs)` and `safe_load_from_file(cls, path: str, **kwargs)`.
 
 ## CLI Overrides Syntax
 
