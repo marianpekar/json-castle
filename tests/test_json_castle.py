@@ -440,6 +440,26 @@ class ExpressionEvalTests(BaseTest):
         item = self._load()
         self.assertEqual(item.expressions[2], "5.7")
 
+class SafeLoadTests(BaseTest):
+
+    def _safe_load(self, **kwargs):
+        return JsonCastle.safe_load_from_file(InventoryItem, self.path, **kwargs)
+
+    def test_simple_expression_no_eval(self):
+        item = self._safe_load()
+        self.assertEqual(item.expression, "{{1+1}}")
+
+    def test_expression_embedded_in_string_no_eval(self):
+        item = self._safe_load()
+        self.assertEqual(item.expressions[0], "1+1={{1+1}}")
+
+    def test_expression_with_stdlib_no_eval(self):
+        item = self._safe_load()
+        self.assertEqual(item.expressions[1], "{{__import__('datetime').datetime.today().strftime('%B %d, %Y')}}")
+
+    def test_expression_with_variable_no_eval(self):
+        item = self._safe_load()
+        self.assertEqual(item.expressions[2], "{{4.7+1}}")
 
 if __name__ == "__main__":
     unittest.main()

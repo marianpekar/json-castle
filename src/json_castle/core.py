@@ -16,6 +16,8 @@ class JsonCastle:
     __INDEXER_PATTERN = re.compile(r"(\w+)\[(\d+)\]")
     __INDEXER_SLICE_PATTERN = re.compile(r"(\w+)\[(\d*):(\d*)\]")
     __EXPR_PATTERN = re.compile(r"\{\{(.*?)\}\}")
+    
+    __JSON_CASTLE_IGNORE_PYTHON = "jsoncastleignorepython"
      
     @staticmethod
     def parse_args(argv, start_idx = 1):
@@ -31,6 +33,20 @@ class JsonCastle:
         return dct
 
     @staticmethod
+    def safe_load_from_file(cls, path: str, **kwargs):
+        """load_from_file wrapper ignoring Python expressions."""
+        kwargs[JsonCastle.__JSON_CASTLE_IGNORE_PYTHON] = True
+        with open(path, "r") as f:
+            return JsonCastle.load(cls, f, **kwargs)
+        pass
+
+    @staticmethod
+    def safe_load(cls, stream: IO[str], **kwargs):
+        """load_file wrapper ignoring Python expressions."""
+        kwargs[JsonCastle.__JSON_CASTLE_IGNORE_PYTHON] = True
+        load(cls, stream, kwargs)
+
+    @staticmethod
     def load_from_file(cls, path: str, **kwargs):
         """Read a JSON file at path and returns an instance of cls. Optionally you can 
         pass **kwargs to post-load overrides."""
@@ -43,7 +59,9 @@ class JsonCastle:
         pass **kwargs to post-load overrides."""
         data = json.load(stream)
         data = JsonCastle.__substitute_variables(data)
-        data = JsonCastle.__evaluate_python(data)
+
+        if JsonCastle.__JSON_CASTLE_IGNORE_PYTHON not in kwargs or kwargs[JsonCastle.__JSON_CASTLE_IGNORE_PYTHON] == False:
+            data = JsonCastle.__evaluate_python(data)
 
         for k, v in kwargs.items():
             if k.startswith("+"):
